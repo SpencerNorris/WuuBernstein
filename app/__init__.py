@@ -6,15 +6,15 @@ Description: Implementation of server code for Wuu-Bernstein.
 '''
 
 
-#Globals
+#Set up globals, populate with pre-existing data
 BLOCKED = set()
 TWEETS = set()
 
-#Populate globals with pre-existing data
-
-
+#=========== Flask Application ===========#
 from flask import Flask
+
 app = Flask(__name__)
+from app import views
 
 @app.route("/")
 def hello():
