@@ -5,15 +5,44 @@ File: app.py
 Description: Implementation of server code for Wuu-Bernstein.
 '''
 
+import requests
+import pickle
+import time
 
-#Set up globals, populate with pre-existing data
+#============== Globals, global population and data modification ===============#
 BLOCKED = set()
-TWEETS = set()
 USERS = set()
+LOG = set()
 
-#=========== Flask Application ===========#
+
+def __BACKUP_LOG():
+	def __log_to_list():
+		'''
+		Sets aren't hashable, so convert to a list.
+		'''
+		pass
+	pass
+
+
+def __READ_LOG_BACKUP():
+	def __list_to_log():
+		'''
+		Get a set from the hashed list.
+		'''
+		pass
+	pass
+
+
+def __GET_BLOCKED_USERS():
+	pass
+
+
+def __GET_ALL_USERS():
+	pass
+
+
+#============================== Flask Application =============================#
 from flask import Flask
-
 app = Flask(__name__)
 from app import views
 
