@@ -11,10 +11,6 @@ import time
 import os
 
 #============== Globals, global population and data modification ===============#
-LOG = __READ_LOG_BACKUP()
-BLOCKED = set()
-USERS = set()
-
 
 def __BACKUP_LOG():
 	global LOG
@@ -42,6 +38,11 @@ def __GET_BLOCKED_USERS():
 def __GET_ALL_USERS():
 	global LOG
 	pass
+
+
+LOG = __READ_LOG_BACKUP()
+BLOCKED = set()
+USERS = set()
 
 
 #============================== Flask Application =============================#
