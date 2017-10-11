@@ -8,36 +8,39 @@ Description: Implementation of server code for Wuu-Bernstein.
 import requests
 import pickle
 import time
+import os
 
 #============== Globals, global population and data modification ===============#
+LOG = __READ_LOG_BACKUP()
 BLOCKED = set()
 USERS = set()
-LOG = set()
 
 
 def __BACKUP_LOG():
-	def __log_to_list():
-		'''
-		Sets aren't hashable, so convert to a list.
-		'''
-		pass
-	pass
+	global LOG
+	L = list(LOG)
+	pickle.dump(L, open('LOG.pickle', 'wb'))
 
 
 def __READ_LOG_BACKUP():
-	def __list_to_log():
-		'''
-		Get a set from the hashed list.
-		'''
-		pass
-	pass
+	'''
+	Read our pickled copy of the log between restarts.
+	If the file doesn't exist, return empty log.
+	'''
+	if not os.path.isfile('LOG.pickle'):
+		return set()
+	else:
+		L = pickle.load(open("LOG.pickle,", 'rb'))
+		return set(L)
 
 
 def __GET_BLOCKED_USERS():
+	global LOG
 	pass
 
 
 def __GET_ALL_USERS():
+	global LOG
 	pass
 
 
