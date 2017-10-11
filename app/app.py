@@ -5,6 +5,14 @@ File: app.py
 Description: Implementation of server code for Wuu-Bernstein.
 '''
 
+
+#Globals
+BLOCKED = set()
+TWEETS = set()
+
+#Populate globals with pre-existing data
+
+
 from flask import Flask
 app = Flask(__name__)
 
