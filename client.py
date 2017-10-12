@@ -3,8 +3,6 @@
 Authors: Spencer Norris, Sabbir Rashid
 Description: Script for Wuu-Bernstein client.
 '''
-from flask import Flask
-app = Flask(__name__)
 
 import sys
 
@@ -48,5 +46,5 @@ def client():
         return 0
 
 if __name__ == '__main__':
-    app.run()
-    #sys.exit(client())
+    #app.run()
+    sys.exit(client())
