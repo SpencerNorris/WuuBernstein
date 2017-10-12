@@ -56,16 +56,28 @@ def __READ_LOG_BACKUP():
 def __GET_BLOCKED_USERS():
 	global LOG
 	global USERS
-	blocked = dict([(user, UnblockEvent('')) for user in USERS])
+
+	#Create dictionary of users pointing to dictionary of other users
+	#Pointing to most recent block or unblock event
+	blocked = {}
+	for user in USERS:
+		blocked[user] = {}
+		for other_user in USERS:
+			if not other_user == user:
+				blocked[user][other_user] = UnblockEvent(user, other_user, 0)
 
 	#Get all block and unblock events
 	events = set(filter(
 					lambda event: type(event) is BlockEvent or type(event) is UnblockEvent, 
 				  LOG))
 
-	#Figure out if they were ever blocked, and whether they were unblocked
+	#Set each user-user interaction to the most block or unblock
 	for event in events:
-		pass
+		if event.time > blocked[event.user][event.target].time:
+			blocked[event.user][event.target] = event
+
+	return blocked
+		
 
 
 def __GET_ALL_USERS():
