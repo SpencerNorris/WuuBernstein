@@ -3,41 +3,50 @@
 Authors: Spencer Norris, Sabbir Rashid
 Description: Script for Wuu-Bernstein client.
 '''
+from flask import Flask
+app = Flask(__name__)
 
 import sys
 
-
+@app.route("/client")
 def client():
-	#Command functions
-	__tweet():
-		pass
+    #Command functions
+    def tweet() :
+        print "Tweeting..."
+        #pass
 
-	__show():
-		pass
+    def show() :
+        print "Showing..."
+        #pass
 
-	__block():
-		pass
+    def block():
+        print "Blocking..."
+        #pass
 
-	__unblock():
-		pass
+    def unblock():
+        print "Unblocking..."
+        #pass
+    
+    command = {
+                'tweet': tweet,
+                'show': show,
+                'block': block,
+                'unblock': unblock,
+            }
 
-
-	VALID_COMMANDS = ['view', 'tweet', 'block', 'unblock', 'exit']
-	while(1):
-		input_var = input("Enter a command: ").lower()
-		if not input_var in VALID_COMMANDS:
-			print("Invalid command!\n")
-			continue
-		elif input_var == 'exit':
-			break
-		else:
-			{
-				'tweet': __tweet,
-				'show': __show,
-				'block': __block,
-				'unblock': __unblock
-			}[input_var]()
-		return 0
+    VALID_COMMANDS = ['view', 'tweet', 'block', 'unblock', 'exit']
+    while(1):
+        input_var = raw_input("Enter a command: ")
+        if not input_var.lower() in VALID_COMMANDS:
+            print("Invalid command!\n")
+            print input_var.lower()
+            continue
+        elif input_var.lower() == 'exit':
+            break
+        else:
+            command[input_var.lower()]()
+        return 0
 
 if __name__ == '__main__':
-	sys.exit(client())
+    app.run()
+    #sys.exit(client())
