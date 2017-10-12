@@ -71,9 +71,25 @@ def __READ_TIME_MATRIX():
 
 	def __unhash_dict():
 		'''
-		Reads in the hashed version of the dictionary
+		Reads in the hashed version of the dictionary.
 		'''
-		pass
+		matrix = {}
+		L = pickle.load(open("TIME_MATRIX.pickle", 'rb'))
+
+		#Create dummy matrix
+		for user in USERS:
+			matrix[user] = {}
+			for other_user in USERS:
+				matrix[user][other_user] = 0
+
+		#Populate new matrix
+		for elem in L:
+			user = elem[0]
+			other_user = elem[1]
+			t = elem[2]
+			matrix[user][other_user] = t
+		return matrix
+
 
 	global USERS
 	if not os.path.isfile('TIME_MATRIX.pickle'):
@@ -93,7 +109,12 @@ def __BACKUP_MATRIX():
 	the pickled object when backing up the time matrix.
 	'''
 	global TIME_MATRIX
-	pass
+	L = []
+	for user, v in TIME_MATRIX.items():
+		for other_user, t in v.items():
+			L.append((user,other_user,t))
+	pickle.dump(L, open('TIME_MATRIX.pickle', 'wb'))
+
 
 
 def __GET_BLOCKED_USERS():
@@ -131,8 +152,9 @@ def __GET_BLOCKED_USERS():
 
 	#Get all block and unblock events
 	events = set(filter(
-					lambda event: type(event) is BlockEvent or type(event) is UnblockEvent, 
-				  LOG))
+				lambda event: 
+				type(event) is BlockEvent or type(event) is UnblockEvent, 
+			LOG))
 
 	#Set each user-user interaction to the most block or unblock
 	for event in events:
@@ -145,13 +167,13 @@ def __GET_BLOCKED_USERS():
 
 def __GET_ALL_USERS():
 	'''
-	Read in local file to get list of users and addresses
+	Read in local file to get list of users and addresses.
 	'''
 	pass
 
 def __GET_ALL_TWEETS():
 	'''
-	Returns list of all tweets currently in the log
+	Returns list of all tweets currently in the log.
 	'''
 	global LOG
 	return set(filter(lambda event: type(event) is Tweet, LOG))
