@@ -5,6 +5,7 @@ File: app.py
 Description: Implementation of server code for Wuu-Bernstein.
 '''
 
+from datetime import datetime
 import requests
 import pickle
 import time
@@ -54,11 +55,30 @@ def __READ_LOG_BACKUP():
 
 
 def __GET_BLOCKED_USERS():
+	'''
+	Returns a dictionary of what what users are and aren't blocking other users.
+	ex.
+	{
+		'user_1' : {
+			'user_2' : BlockEvent('user_1', 'user_2', 5)
+		}
+		...
+	}
+
+	meaning user_1 blocked user_2 at time 5. If user_1 unblocks user_2 at time 6,
+
+	{
+		'user_1' : {
+			'user_2' : UnblockEvent('user_1', 'user_2', 6)
+		}
+		...
+	}
+	'''
 	global LOG
 	global USERS
 
 	#Create dictionary of users pointing to dictionary of other users
-	#Pointing to most recent block or unblock event
+	#Pointing to the earliest possible state between users of the system
 	blocked = {}
 	for user in USERS:
 		blocked[user] = {}
@@ -86,13 +106,20 @@ def __GET_ALL_USERS():
 	'''
 	pass
 
+def __GET_ALL_TWEETS():
+	'''
+	Returns list of all tweets currently in the log
+	'''
+	global LOG
+	return set(filter(lambda event: type(event) is Tweet, LOG))
+
 
 LOG = __READ_LOG_BACKUP()
-BLOCKED = set()
-USERS = set()
+BLOCKED = __GET_BLOCKED_USERS()
+USERS = __GET_ALL_USERS()
 
 
-#============================== Flask Application =============================#
+#============================ Flask API Application ============================#
 
 from flask import Flask
 app = Flask(__name__)
@@ -100,16 +127,39 @@ app = Flask(__name__)
 
 @app.route("/tweet")
 def tweet():
+	time = datetime.utcnow()
+
+	#Create tweet event, add to log
+
+	#Send log to all non-blocked users
+
+	__BACKUP_LOG()
 	return "Hello World!"
 
 @app.route("/block")
 def block():
-	return "Hello World!"
+	time = datetime.utcnow()
+	#Find most recent block or unblock operation and remove it
+
+	#Add this operation to log
+
+
+	__BACKUP_LOG()
+	return "%s blocked at time %s" % (target, time)
 
 @app.route("/unblock")
 def unblock():
+	time = datetime.utcnow()
+
+	#Find most recent block or unblock operation and remove it
+
+	#Add this operation to log
+
+	#Backup log
+
 	return "Hello World!"
 
 @app.route("/show")
 def show():
+	#Return ordered list of all tweets
 	return "Hello World!"
