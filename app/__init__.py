@@ -36,6 +36,11 @@ class UnblockEvent:
 
 #============== Globals, global population and data modification ===============#
 
+LOG = None
+BLOCKED = None
+USERS = None
+TIME_MATRIX = None
+
 def __BACKUP_LOG():
 	global LOG
 	L = list(LOG)
@@ -53,10 +58,48 @@ def __READ_LOG_BACKUP():
 		L = pickle.load(open("LOG.pickle,", 'rb'))
 		return set(L)
 
+def __READ_TIME_MATRIX():
+	'''
+	This matrix, implemented as a dict of dicts, defines what
+	any given node knows about any other given node based on
+	what their most recent known time stamp was.
+
+	If this matrix already exists as a pickled object, read
+	it from the local disk. Otherwise, create a brand new 
+	time matrix.
+	'''
+
+	def __unhash_dict():
+		'''
+		Reads in the hashed version of the dictionary
+		'''
+		pass
+
+	global USERS
+	if not os.path.isfile('TIME_MATRIX.pickle'):
+		matrix = {}
+		for user in USERS:
+			for other_user in USERS:
+				matrix[user][other_user] = 0
+		return matrix
+	else:
+		return __unhash_dict()
+
+
+def __BACKUP_MATRIX():
+	'''
+	Dictionaries in Python are not hashable,
+	thus we need a small workaround for storing
+	the pickled object when backing up the time matrix.
+	'''
+	global TIME_MATRIX
+	pass
+
 
 def __GET_BLOCKED_USERS():
 	'''
-	Returns a dictionary of what what users are and aren't blocking other users.
+	Returns a dictionary of what what users are 
+	and aren't blocking other users.
 	ex.
 	{
 		'user_1' : {
@@ -114,16 +157,18 @@ def __GET_ALL_TWEETS():
 	return set(filter(lambda event: type(event) is Tweet, LOG))
 
 
-LOG = __READ_LOG_BACKUP()
-BLOCKED = __GET_BLOCKED_USERS()
-USERS = __GET_ALL_USERS()
-
 
 #============================ Flask API Application ============================#
 
 from flask import Flask
 app = Flask(__name__)
 #from app import views
+
+#Populate globals on initialization
+LOG = __READ_LOG_BACKUP()
+BLOCKED = __GET_BLOCKED_USERS()
+USERS = __GET_ALL_USERS()
+TIME_MATRIX = __READ_TIME_MATRIX()
 
 @app.route("/tweet")
 def tweet():
