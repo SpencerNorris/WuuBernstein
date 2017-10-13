@@ -12,6 +12,7 @@ from datetime import datetime
 from copy import copy
 import requests
 import pickle
+import socket
 import json
 import time
 import csv
@@ -295,26 +296,35 @@ def tweet(text):
 
 
 
-def block(user):
+def block(target):
     '''
     Add block event to local log for target user.
     '''
     global LOG
+    global TIME_MATRIX
+    global BLOCKED
     time = datetime.utcnow()
 
-    #Find most recent block or unblock operation and remove it
-    most_recent_event = list(LOG)
+    #Find most recent block or unblock operation on user and remove it
+    LOG = {event for event in LOG
+             if not (
+                        (type(event) is BlockEvent and event.target == target) or
+                        (type(event) is UnblockEvent and event.target == target)
+                )
+        } 
 
     #Add this operation to log
     LOG.add(BlockEvent(MY_USER, target, time))
 
-    #Update matrix
+    #Update time matrix
     TIME_MATRIX[MY_USER][MY_USER] = time
+
+    #Update block matrix
+    BLOCKED[MY_USER][target] = BlockEvent(MY_USER, target, time)
 
     #Backup log, matrix
     __BACKUP_LOG()
     __BACKUP_MATRIX()
-    return "%s blocked at time %s" % (target, time)
 
 
 
@@ -322,20 +332,27 @@ def unblock(target):
     global LOG
     global MY_USER
     time = datetime.utcnow()
-    event = UnblockEvent(MY_USER, target, time)
 
-    #Find most recent block or unblock operation and remove it
-    
+    #Find most recent block or unblock operation on user and remove it
+    LOG = {event for event in LOG
+             if not (
+                        (type(event) is BlockEvent and event.target == target) or
+                        (type(event) is UnblockEvent and event.target == target)
+                )
+        }     
 
     #Add this operation to log
+    LOG.add(UnblockEvent(MY_USER, target, time))
 
     #Update matrix
+    TIME_MATRIX[MY_USER][MY_USER] = time
+
+    #Update block matrix
+    BLOCKED[MY_USER][target] = UnblockEvent(MY_USER, target, time)
 
     #Backup log, matrix
     __BACKUP_LOG()
     __BACKUP_MATRIX()
-
-    return "Hello World!"
 
 
 
@@ -343,6 +360,15 @@ def view():
     '''
     Send ordered list of tweets as tuples to client.
     '''
+
+    def __transmit_view():
+        '''
+        Passes the dumped tweets back to the client over TCP.
+        '''
+        pass
+
+    global USERS
+    global BLOCKED
     global MY_CLIENT_ADDRESS
 
     #Pull in all tweets and sort
@@ -350,6 +376,15 @@ def view():
     tweets = sort(tweets, key=lambda tweet: tweet[2], reverse=true)
 
     #filter out tweets this user isn't allowed to see
+    for other_user in USERS:
+        block_unblock_event = BLOCKED[other_user][MY_USER]
+
+        #Our user is blocked, filter all tweets after block from other user
+        if type(block_unblock_event) is BlockEvent:
+        tweets = list(filter(
+                    key=lambda tweet: 
+                        tweet[2] < block_unblock_event.time and tweet[0] == block_unblock_event.user
+                tweets))
 
     #Send tweets back to client
     return json.dumps(tweets)
@@ -365,6 +400,8 @@ def receive_tweet(other_log, other_time_matrix):
 
     #Update local event log, including updating block and unblock states
 
+    #Update BLOCKED matrix
+
     #Backup
     __BACKUP_LOG()
     __BACKUP_MATRIX()
@@ -375,7 +412,37 @@ def get_message():
     '''
     Retrieves a message from the mailbox daemon.
     '''
-    pass
+    def __decode_receive_tweet():
+        '''
+        Requires two handshakes: one to receive the pickled log,
+        the other to receive the pickled time matrix.
+        '''
+       pass
+
+    def __decode_tweet():
+        pass
+
+    def __decode_block():
+        pass
+
+    def __decode_unblock():
+        pass
+
+    def __decode_view():
+        pass
+
+    # create an ipv4 (AF_INET) socket object using the tcp protocol (SOCK_STREAM)
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # connect the client
+    # client.connect((target, port))
+    client.connect(('0.0.0.0', 9999))
+
+    # send some data (in this case a HTTP GET request)
+    client.send('GET /index.html HTTP/1.1\r\nHost: {}.{}\r\n\r\n'.format(sld, tld))
+
+    # receive the response data (4096 is recommended buffer size)
+    response = client.recv(4096)
 
 
 #MAIN LOOP
