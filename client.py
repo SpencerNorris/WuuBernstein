@@ -6,43 +6,57 @@ Description: Script for Wuu-Bernstein client.
 
 import sys
 
-@app.route("/client")
 def client():
     #Command functions
-    def tweet() :
+    def __tweet(message) :
         print "Tweeting..."
+        print message
         #pass
 
-    def show() :
+    def __show() :
         print "Showing..."
         #pass
 
-    def block():
+    def __block(message):
         print "Blocking..."
+        print message
         #pass
 
-    def unblock():
+    def __unblock(message):
         print "Unblocking..."
+        print message
         #pass
     
     command = {
-                'tweet': tweet,
-                'show': show,
-                'block': block,
-                'unblock': unblock,
+                'tweet': __tweet,
+                'show': __show,
+                'block': __block,
+                'unblock': __unblock,
             }
 
     VALID_COMMANDS = ['view', 'tweet', 'block', 'unblock', 'exit']
     while(1):
         input_var = raw_input("Enter a command: ")
-        if not input_var.lower() in VALID_COMMANDS:
-            print("Invalid command!\n")
-            print input_var.lower()
+        endIndex=-1
+        input_command = ""
+        for i in range(len(input_var)) :
+            if input_var[i] is ' ' :
+                endIndex = i
+                break
+        if endIndex !=-1 :
+            input_command = input_var[0:endIndex]
+        else :
+            input_command = input_var
+        if not input_command.lower() in VALID_COMMANDS:
+            print("Invalid command: " + input_command.lower() + "\n")
             continue
-        elif input_var.lower() == 'exit':
+        elif input_command.lower() == 'exit':
             break
         else:
-            command[input_var.lower()]()
+            if endIndex !=-1 :
+                command[input_command.lower()](input_var[endIndex+1:])
+            else : 
+                command[input_command.lower()](input_var)
         return 0
 
 if __name__ == '__main__':
