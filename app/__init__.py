@@ -109,11 +109,11 @@ def __READ_TIME_MATRIX():
     global USERS
     if not os.path.isfile('TIME_MATRIX.pickle'):
         matrix = {}
-        if(USERS is not None) :
-            for user in USERS:
-                for other_user in USERS:
-                    matrix[user][other_user] = 0
-            return matrix
+        for user in USERS:
+            matrix[user] = {}
+            for other_user in USERS:
+                matrix[user][other_user] = 0
+        return matrix
     else:
         return __unhash_dict()
 
@@ -189,12 +189,13 @@ def __GET_ALL_USERS_ADDRESSES():
     '''
     users = []
     addresses = []
-    with open('users.csv', 'rb') as f:
-        csv.reader(f)
+    with open('users.csv', 'r') as f:
+        reader = csv.reader(f)
         for row in reader:
             users.append(row[0])
             addresses.append(row[1])
     return users,addresses
+
 
 def __GET_ALL_TWEETS():
     '''
@@ -203,6 +204,22 @@ def __GET_ALL_TWEETS():
     global LOG
     return set(filter(lambda event: type(event) is Tweet, LOG))
 
+
+def __GET_PRUNED_LOG(curr_event, other_user):
+    '''
+    Prunes the log so it only sends events after the most recent
+    timestamp this node has on record for other_user.
+    '''
+
+    def __has_rec(event):
+        '''
+        Determines whether it's possible other_user knows about the event.
+        '''
+        global TIME_MATRIX
+        pass
+
+    global LOG
+    pass
 
 
 #============================ Flask API Application ============================#
@@ -225,7 +242,7 @@ def tweet():
     #Create tweet event, add to log
 
     #Prune log
-    pruned_log = copy(LOG)
+    pruned_log = __GET_PRUNED_LOG()
 
     #Send pruned log to all non-blocked users
 
@@ -279,6 +296,18 @@ def view():
     '''
     Send ordered list of tweets as tuples to client.
     '''
+    #Pull in all tweets and sort
     tweets = [(tweet.user, tweet.text, tweet.time) for tweet in __GET_ALL_TWEETS()]
     tweets = sort(tweets, key=lambda tweet: tweet[2], reverse=true)
+
+    #filter out tweets this user isn't allowed to see
+
     return json.dumps(tweets)
+
+
+@app.route("/receive_tweet")
+def receive_tweet():
+    '''
+    Reads in log from other node and 
+    '''
+    pass
