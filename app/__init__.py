@@ -3,12 +3,16 @@
 Authors: Spencer Norris, Sabbir Rashid
 File: app.py
 Description: Implementation of server code for Wuu-Bernstein.
+
+Note: you'll need to set the environment variable 'TWITTER_USER' to the
+user of the local node.
 '''
 
 from datetime import datetime
 import requests
 import pickle
 import time
+import csv
 import os
 
 #========================== Class Structure ====================================#
@@ -34,12 +38,14 @@ class UnblockEvent:
         self.time = time
 
 
-#============== Globals, global population and data modification ===============#
+#============ Globals, global population and local data read/write =============#
 
 LOG = None
 BLOCKED = None
 USERS = None
+ADDRESSES = None
 TIME_MATRIX = None
+MY_USER = os.environ['TWITTER_USER']
 
 def __BACKUP_LOG():
     global LOG
@@ -122,6 +128,7 @@ def __GET_BLOCKED_USERS():
     '''
     Returns a dictionary of what what users are 
     and aren't blocking other users.
+    For example, if user_1 blocked user_2 at time 5,
     ex.
     {
         'user_1' : {
@@ -167,11 +174,18 @@ def __GET_BLOCKED_USERS():
         
 
 
-def __GET_ALL_USERS():
+def __GET_ALL_USERS_ADDRESSES():
     '''
-    Read in local file to get list of users and addresses.
+    Read in local two-column CSV file to get list of users and addresses.
     '''
-    pass
+    users = []
+    addresses = []
+    with open('users.csv', 'rb') as f:
+        csv.reader(f)
+        for row in reader:
+            users.append(row[0])
+            addresses.append(row[1])
+    return users,addresses
 
 def __GET_ALL_TWEETS():
     '''
@@ -191,7 +205,7 @@ app = Flask(__name__)
 #Populate globals on initialization
 LOG = __READ_LOG_BACKUP()
 BLOCKED = __GET_BLOCKED_USERS()
-USERS = __GET_ALL_USERS()
+USERS, ADDRESSES = __GET_ALL_USERS_ADDRESSES()
 TIME_MATRIX = __READ_TIME_MATRIX()
 
 @app.route("/tweet")
