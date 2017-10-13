@@ -317,10 +317,14 @@ def block(user):
 
 
 
-def unblock(user):
+def unblock(target):
+    global LOG
+    global MY_USER
     time = datetime.utcnow()
+    event = UnblockEvent(MY_USER, target, time)
 
     #Find most recent block or unblock operation and remove it
+    
 
     #Add this operation to log
 
