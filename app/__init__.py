@@ -9,8 +9,10 @@ user of the local node.
 '''
 
 from datetime import datetime
+from copy import copy
 import requests
 import pickle
+import json
 import time
 import csv
 import os
@@ -45,7 +47,6 @@ BLOCKED = None
 USERS = None
 ADDRESSES = None
 TIME_MATRIX = None
-MY_USER = os.environ['TWITTER_USER']
 
 def __BACKUP_LOG():
     global LOG
@@ -69,6 +70,14 @@ def __READ_TIME_MATRIX():
     This matrix, implemented as a dict of dicts, defines what
     any given node knows about any other given node based on
     what their most recent known time stamp was.
+
+    {
+        'user_1': {
+            'user_2': TIME
+            ...
+        }
+        ...
+    }
 
     If this matrix already exists as a pickled object, read
     it from the local disk. Otherwise, create a brand new 
@@ -204,9 +213,10 @@ app = Flask(__name__)
 
 #Populate globals on initialization
 LOG = __READ_LOG_BACKUP()
-BLOCKED = __GET_BLOCKED_USERS()
 USERS, ADDRESSES = __GET_ALL_USERS_ADDRESSES()
+BLOCKED = __GET_BLOCKED_USERS()
 TIME_MATRIX = __READ_TIME_MATRIX()
+MY_USER = os.environ['TWITTER_USER']
 
 @app.route("/tweet")
 def tweet():
@@ -214,21 +224,37 @@ def tweet():
 
     #Create tweet event, add to log
 
-    #Send log to all non-blocked users
+    #Prune log
+    pruned_log = copy(LOG)
 
+    #Send pruned log to all non-blocked users
+
+
+    #Backup log, backup matrix
     __BACKUP_LOG()
+    __BACKUP_MATRIX()
     return "Hello World!"
+
+
 
 @app.route("/block")
 def block():
     time = datetime.utcnow()
+
     #Find most recent block or unblock operation and remove it
 
     #Add this operation to log
+    LOG.add(BlockEvent(MY_USER, target, time))
 
+    #Update matrix
+    TIME_MATRIX[MY_USER][MY_USER] = time
 
+    #Backup log, matrix
     __BACKUP_LOG()
+    __BACKUP_MATRIX()
     return "%s blocked at time %s" % (target, time)
+
+
 
 @app.route("/unblock")
 def unblock():
@@ -238,11 +264,21 @@ def unblock():
 
     #Add this operation to log
 
-    #Backup log
+    #Update matrix
+
+    #Backup log, matrix
+    __BACKUP_LOG()
+    __BACKUP_MATRIX()
 
     return "Hello World!"
 
-@app.route("/show")
-def show():
-    #Return ordered list of all tweets
-    return "Hello World!"
+
+
+@app.route("/view")
+def view():
+    '''
+    Send ordered list of tweets as tuples to client.
+    '''
+    tweets = [(tweet.user, tweet.text, tweet.time) for tweet in __GET_ALL_TWEETS()]
+    tweets = sort(tweets, key=lambda tweet: tweet[2], reverse=true)
+    return json.dumps(tweets)
