@@ -65,6 +65,39 @@ def __READ_LOG_BACKUP():
         L = pickle.load(open("LOG.pickle,", 'rb'))
         return set(L)
 
+def __UNHASH_DICT(f):
+    '''
+    Reads in the hashed versions of the TIME_MATRIX.
+    '''
+    matrix = {}
+    L = pickle.load(f)
+
+    #Create dummy matrix
+    for user in USERS:
+        matrix[user] = {}
+        for other_user in USERS:
+            matrix[user][other_user] = 0
+
+    #Populate new matrix
+    for elem in L:
+        user = elem[0]
+        other_user = elem[1]
+        t = elem[2]
+        matrix[user][other_user] = t
+    return matrix
+
+
+def __HASH_DICT(d):
+    '''
+    Writes out hashable versions of the TIME_MATRIX.
+    '''
+    L = []
+    for user, v in d.items():
+        for other_user, t in v.items():
+            L.append((user,other_user,t))
+    return L
+
+
 def __READ_TIME_MATRIX():
     '''
     This matrix, implemented as a dict of dicts, defines what
@@ -83,29 +116,6 @@ def __READ_TIME_MATRIX():
     it from the local disk. Otherwise, create a brand new 
     time matrix.
     '''
-
-    def __unhash_dict():
-        '''
-        Reads in the hashed version of the dictionary.
-        '''
-        matrix = {}
-        L = pickle.load(open("TIME_MATRIX.pickle", 'rb'))
-
-        #Create dummy matrix
-        for user in USERS:
-            matrix[user] = {}
-            for other_user in USERS:
-                matrix[user][other_user] = 0
-
-        #Populate new matrix
-        for elem in L:
-            user = elem[0]
-            other_user = elem[1]
-            t = elem[2]
-            matrix[user][other_user] = t
-        return matrix
-
-
     global USERS
     if not os.path.isfile('TIME_MATRIX.pickle'):
         matrix = {}
@@ -115,7 +125,7 @@ def __READ_TIME_MATRIX():
                 matrix[user][other_user] = 0
         return matrix
     else:
-        return __unhash_dict()
+        return __UNHASH_DICT(open("TIME_MATRIX.pickle", 'rb'))
 
 
 def __BACKUP_MATRIX():
@@ -125,10 +135,7 @@ def __BACKUP_MATRIX():
     the pickled object when backing up the time matrix.
     '''
     global TIME_MATRIX
-    L = []
-    for user, v in TIME_MATRIX.items():
-        for other_user, t in v.items():
-            L.append((user,other_user,t))
+    L = __HASH_DICT(TIME_MATRIX)
     pickle.dump(L, open('TIME_MATRIX.pickle', 'wb'))
 
 
@@ -205,7 +212,7 @@ def __GET_ALL_TWEETS():
     return set(filter(lambda event: type(event) is Tweet, LOG))
 
 
-def __GET_PRUNED_LOG(curr_event, other_user):
+def __GET_PRUNED_LOG(other_user):
     '''
     Prunes the log so it only sends events after the most recent
     timestamp this node has on record for other_user.
@@ -216,10 +223,14 @@ def __GET_PRUNED_LOG(curr_event, other_user):
         Determines whether it's possible other_user knows about the event.
         '''
         global TIME_MATRIX
-        pass
+        return TIME_MATRIX[event.user][other_user] >= event.time
 
     global LOG
-    pass
+    pruned_log = copy(LOG)
+    for event in LOG:
+        if not __has_rec(event):
+            pruned_log.add(event)
+    return pruned_log
 
 
 #============================ Flask API Application ============================#
@@ -237,19 +248,38 @@ MY_USER = os.environ['TWITTER_USER']
 
 @app.route("/tweet")
 def tweet():
+
+    def __transmit_log(log, target):
+        '''
+        Carries out a transaction with the receiving node in order to transmit
+        the pickled, hashed version of the time matrix and the pickled, hashed
+        version of the log.
+        '''
+        global TIME_MATRIX
+        hashable_time_matrix = __HASH_DICT(TIME_MATRIX)
+        L = list(log)
+
+        #TODO: pickle the hashed log and time matrix and send
+        pass
+
+
     time = datetime.utcnow()
 
-    #Create tweet event, add to log
+    #Create tweet event, add to local log and pruned log
+    tweet = Tweet(MY_USER, text, time)
 
-    #Prune log
-    pruned_log = __GET_PRUNED_LOG()
-
-    #Send pruned log to all non-blocked users
-
+    #Send pruned log, time matrix to all non-blocked users
+    for other_user in USERS:
+        if not type(BLOCKED[MY_USER][other_user]) is BlockEvent:
+            pruned_log = __GET_PRUNED_LOG(other_user)
+            pruned_log.add(tweet)
+            __transmit_log(pruned_log,other_user)
 
     #Backup log, backup matrix
+    LOG.add(tweet)
     __BACKUP_LOG()
     __BACKUP_MATRIX()
+
     return "Hello World!"
 
 
@@ -308,6 +338,10 @@ def view():
 @app.route("/receive_tweet")
 def receive_tweet():
     '''
-    Reads in log from other node and 
+    Reads in log, time matrix from other node and updates
     '''
+    
+    #Update local time matrix
+
+    #Update local event log, including updating block and unblock states
     pass
