@@ -303,6 +303,7 @@ def block(user):
     time = datetime.utcnow()
 
     #Find most recent block or unblock operation and remove it
+    most_recent_event = list(LOG)
 
     #Add this operation to log
     LOG.add(BlockEvent(MY_USER, target, time))
