@@ -13,7 +13,7 @@ class Mailbox:
 		self.client_port = 9999
 		self.mail_port = 9000
 		server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		server.bind((bind_ip, bind_port))
+		server.bind((self.client_ip, self.client_port))
 		server.listen(20) 
 		print("Mailbox listening on {}:{}".format(bind_ip,bind_port))
 
@@ -32,11 +32,14 @@ class Mailbox:
 
 		def __handle_block(buff_size):
 			pass
+
 		def __handle_unblock(buff_size):
 			pass
 
-		#Figure out request type
+		def __handle_message(buff_size):
+			pass
 
+		#Figure out request type
 
 		#Get data buffer size
 		BUFFER_SIZE = client_sock.recv(1024).decode()
