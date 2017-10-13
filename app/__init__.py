@@ -233,11 +233,8 @@ def __GET_PRUNED_LOG(other_user):
     return pruned_log
 
 
-#============================ Flask API Application ============================#
+#============================ API Application ============================#
 
-from flask import Flask
-app = Flask(__name__)
-#from app import views
 
 #Populate globals on initialization
 LOG = __READ_LOG_BACKUP()
@@ -245,30 +242,46 @@ USERS, ADDRESSES = __GET_ALL_USERS_ADDRESSES()
 BLOCKED = __GET_BLOCKED_USERS()
 TIME_MATRIX = __READ_TIME_MATRIX()
 MY_USER = os.environ['TWITTER_USER']
+MY_CLIENT_ADDRESS = os.environ['CLIENT_ADDR']
+VALID_COMMANDS = ['view', 'tweet', 'block', 'unblock']
 
-@app.route("/tweet")
-def tweet():
+def tweet(text):
 
-    def __transmit_log(log, target):
+    def __send_message(log, target_user):
         '''
         Carries out a transaction with the receiving node in order to transmit
         the pickled, hashed version of the time matrix and the pickled, hashed
         version of the log.
         '''
         global TIME_MATRIX
+        global ADDRESSES
+
+        #Retrieve target address
+        target_addr = ADDRESSES[USERS.index(other_user)]
+
+        #Create hashable objects, pickle them
         hashable_time_matrix = __HASH_DICT(TIME_MATRIX)
         L = list(log)
+        hashable_time_matrix = pickle.dumps(hashable_time_matrix)
+        L = pickle.dumps(L)
 
-        #TODO: pickle the hashed log and time matrix and send
-        pass
+        #TODO: send pickled objects to mailbox of target user####################
 
 
+
+    #Update time matrix
+    global TIME_MATRIX
+    global MY_USER
     time = datetime.utcnow()
+    TIME_MATRIX[MY_USER][MY_USER] = time
 
-    #Create tweet event, add to local log and pruned log
+    #Create tweet event, add to pruned logs
     tweet = Tweet(MY_USER, text, time)
 
     #Send pruned log, time matrix to all non-blocked users
+    global USERS
+    global ADDRESSES
+    global BLOCKED
     for other_user in USERS:
         if not type(BLOCKED[MY_USER][other_user]) is BlockEvent:
             pruned_log = __GET_PRUNED_LOG(other_user)
@@ -280,12 +293,13 @@ def tweet():
     __BACKUP_LOG()
     __BACKUP_MATRIX()
 
-    return "Hello World!"
 
 
-
-@app.route("/block")
-def block():
+def block(user):
+    '''
+    Add block event to local log for target user.
+    '''
+    global LOG
     time = datetime.utcnow()
 
     #Find most recent block or unblock operation and remove it
@@ -303,8 +317,7 @@ def block():
 
 
 
-@app.route("/unblock")
-def unblock():
+def unblock(user):
     time = datetime.utcnow()
 
     #Find most recent block or unblock operation and remove it
@@ -321,27 +334,71 @@ def unblock():
 
 
 
-@app.route("/view")
 def view():
     '''
     Send ordered list of tweets as tuples to client.
     '''
+    global MY_CLIENT_ADDRESS
+
     #Pull in all tweets and sort
     tweets = [(tweet.user, tweet.text, tweet.time) for tweet in __GET_ALL_TWEETS()]
     tweets = sort(tweets, key=lambda tweet: tweet[2], reverse=true)
 
     #filter out tweets this user isn't allowed to see
 
+    #Send tweets back to client
     return json.dumps(tweets)
 
 
-@app.route("/receive_tweet")
-def receive_tweet():
+
+def receive_tweet(other_log, other_time_matrix):
     '''
-    Reads in log, time matrix from other node and updates
+    Reads in log, time matrix from other node and updates each.
     '''
     
     #Update local time matrix
 
     #Update local event log, including updating block and unblock states
+
+    #Backup
+    __BACKUP_LOG()
+    __BACKUP_MATRIX()
+
+
+
+def get_message():
+    '''
+    Retrieves a message from the mailbox daemon.
+    '''
     pass
+
+
+#MAIN LOOP
+while(1):
+    cmd = get_message() #Retrieves message of form ('command', [Args])
+
+    #No messages right now
+    if cmd is None:
+        continue
+
+    #Catch invalid commands
+    if not cmd[0] in VALID_COMMANDS:
+        print("Invalid command!")
+        continue
+
+    #Handle commands
+    #NOTE: Can always assume commands come from client
+    if cmd[0] == 'block':
+        block(cmd[1])
+    elif cmd[0] == 'unblock':
+        unblock(cmd[1])
+    elif cmd[0] == 'tweet':
+        tweet(cmd[1])
+    elif cmd[0] == 'view':
+        view()
+
+    #Otherwise, we're receiving a tweet from another node
+    else:
+        other_log = set(pickle.loads(cmd[1][0]))
+        other_time_matrix = __UNHASH_DICT(pickle.loads(cmd[1][1]))
+        receive_tweet(set(other_log), other_time_matrix)
