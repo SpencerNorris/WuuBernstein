@@ -540,30 +540,30 @@ def get_message():
 
 #=================MAIN LOOP==========================================#
 
-# while(True):
-#     cmd = get_message() #Retrieves message of form ('command', [Args])
+while(True):
+    cmd = get_message() #Retrieves message of form ('command', [Args])
 
-#     #No messages right now
-#     if cmd is None:
-#         continue
+    #No messages right now
+    if cmd is None:
+        continue
 
-#     #Catch invalid commands
-#     if not cmd[0] in VALID_COMMANDS:
-#         print("Invalid command!")
-#         continue
+    #Catch invalid commands
+    if not cmd[0] in VALID_COMMANDS:
+        print("Invalid command!")
+        continue
 
-#     #Handle commands
-#     #NOTE: Can always assume commands come from client
-#     if cmd[0] == 'block':
-#         block(cmd[1]) # blocked user goes here
-#     elif cmd[0] == 'unblock':
-#         unblock(cmd[1]) # unblocked user goes here
-#     elif cmd[0] == 'tweet':
-#         tweet(cmd[1]) # tweet text goes here
-#     elif cmd[0] == 'view':
-#         view()
-#     elif cmd[0] == 'receive_tweet':
-#         receive_tweet(cmd[1][0], cmd[1][1], cmd[1][2]) #other user, other log and other time matrix
-#     else:
-#         print("No matching command!")
-#         continue
+    #Handle commands
+    #NOTE: Can always assume commands come from client
+    if cmd[0] == 'block':
+        block(cmd[1]) # blocked user goes here
+    elif cmd[0] == 'unblock':
+        unblock(cmd[1]) # unblocked user goes here
+    elif cmd[0] == 'tweet':
+        tweet(cmd[1]) # tweet text goes here
+    elif cmd[0] == 'view':
+        view()
+    elif cmd[0] == 'receive_tweet':
+        receive_tweet(cmd[1][0], cmd[1][1], cmd[1][2]) #other user, other log and other time matrix
+    else:
+        print("No matching command!")
+        continue
