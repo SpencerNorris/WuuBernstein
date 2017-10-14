@@ -63,15 +63,14 @@ def __READ_LOG_BACKUP():
     if not os.path.isfile('LOG.pickle'):
         return set()
     else:
-        L = pickle.load(open("LOG.pickle,", 'rb'))
+        L = pickle.load(open("LOG.pickle", 'rb'))
         return set(L)
 
-def __UNHASH_DICT(f):
+def __UNHASH_DICT(L):
     '''
     Reads in the hashed versions of the TIME_MATRIX.
     '''
     matrix = {}
-    L = pickle.load(f)
 
     #Create dummy matrix
     for user in USERS:
@@ -118,15 +117,17 @@ def __READ_TIME_MATRIX():
     time matrix.
     '''
     global USERS
+    time = datetime.utcnow()
     if not os.path.isfile('TIME_MATRIX.pickle'):
         matrix = {}
         for user in USERS:
             matrix[user] = {}
             for other_user in USERS:
-                matrix[user][other_user] = 0
+                matrix[user][other_user] = time
         return matrix
     else:
-        return __UNHASH_DICT(open("TIME_MATRIX.pickle", 'rb'))
+        L = pickle.load(open("TIME_MATRIX.pickle", 'rb'))
+        return __UNHASH_DICT(L)
 
 
 def __BACKUP_MATRIX():
@@ -174,7 +175,7 @@ def __GET_BLOCKED_USERS():
             blocked[user] = {}
             for other_user in USERS:
                 if not other_user == user:
-                    blocked[user][other_user] = UnblockEvent(user, other_user, 0)
+                    blocked[user][other_user] = UnblockEvent(user, other_user, datetime.now())
 
     #Get all block and unblock events
     events = set(filter(
@@ -284,10 +285,13 @@ def tweet(text):
     global ADDRESSES
     global BLOCKED
     for other_user in USERS:
+        if other_user == MY_USER:
+            continue
         if not type(BLOCKED[MY_USER][other_user]) is BlockEvent:
             pruned_log = __GET_PRUNED_LOG(other_user)
             pruned_log.add(tweet)
-            __transmit_log(pruned_log,other_user)
+            print(pruned_log)
+            __send_message(pruned_log,other_user)
 
     #Backup log, backup matrix
     LOG.add(tweet)
@@ -361,10 +365,11 @@ def view():
     Send ordered list of tweets as tuples to client.
     '''
 
-    def __transmit_view():
+    def __send_to_client(tweets):
         '''
         Passes the dumped tweets back to the client over TCP.
         '''
+        #Needs to be implemented @Sabbir
         pass
 
     global USERS
@@ -378,16 +383,11 @@ def view():
     #filter out tweets this user isn't allowed to see
     for other_user in USERS:
         block_unblock_event = BLOCKED[other_user][MY_USER]
-
-        #Our user is blocked, filter all tweets after block from other user
         if type(block_unblock_event) is BlockEvent:
-            tweets = list(filter(
-                lambda tweet: 
-                    tweet[2] < block_unblock_event.time and tweet[0] == block_unblock_event.user,
-                tweets))
+            tweets = list(filter(lambda tweet: not tweet[0] == other_user, tweets))
 
     #Send tweets back to client
-    return json.dumps(tweets)
+    __send_to_client(tweets)
 
 
 
@@ -424,7 +424,6 @@ def receive_tweet(other_user, other_log, other_time_matrix):
     #Backup
     __BACKUP_LOG()
     __BACKUP_MATRIX()
-
 
 
 def get_message():
