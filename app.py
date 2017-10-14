@@ -310,13 +310,16 @@ def block(target):
     global BLOCKED
     time = datetime.utcnow()
 
-    #Find most recent block or unblock operation on user and remove it
+    #Find most recent block or unblock operation by our user on target and remove it
     LOG = {event for event in LOG
              if not (
-                        (type(event) is BlockEvent and event.target == target) or
-                        (type(event) is UnblockEvent and event.target == target)
+                        (
+                         (type(event) is BlockEvent) or
+                         (type(event) is UnblockEvent)
+                        ) and
+                        event.user == MY_USER and event.target == target
                 )
-        } 
+        }     
 
     #Add this operation to log
     LOG.add(BlockEvent(MY_USER, target, time))
@@ -338,11 +341,15 @@ def unblock(target):
     global MY_USER
     time = datetime.utcnow()
 
-    #Find most recent block or unblock operation on user and remove it
-    LOG = {event for event in LOG
-             if not (
-                        (type(event) is BlockEvent and event.target == target) or
-                        (type(event) is UnblockEvent and event.target == target)
+    #Find most recent block or unblock operation by our user on target and remove it
+    LOG = {
+            event for event in LOG
+            if not (
+                        (
+                         (type(event) is BlockEvent) or
+                         (type(event) is UnblockEvent)
+                        ) and
+                        event.user == MY_USER and event.target == target
                 )
         }     
 
@@ -391,38 +398,75 @@ def view():
 
     #Send tweets back to client
     __send_to_client(tweets)
+    print(tweets)
 
 
 
-def receive_tweet(other_user, other_log, other_time_matrix):
+def receive_tweet(remote_user, other_log, other_time_matrix):
     '''
     Reads in log, time matrix from other node and updates each.
     '''
+    global LOG
     global USERS
-    global TIME_MATRIX
+    global BLOCKED
     
-    def __update_time_matrix():
+    def __update_time_matrix(remote_user, other_time_matrix):
         '''
         Updates the time matrix according to Wuu-Bernstein.
         '''
+        global TIME_MATRIX
         for user in USERS:
             TIME_MATRIX[MY_USER][user] = max(
                     TIME_MATRIX[MY_USER][user],
-                    other_time_matrix[MY_USER][user]
+                    other_time_matrix[remote_user][user]
                 )
         for user in USERS:
             for other_user in USERS:
                 TIME_MATRIX[user][other_user] = max(
                     TIME_MATRIX[user][other_user],
-                    other_time_matrix[MY_USER][other_user]
+                    other_time_matrix[user][other_user]
                 )
 
     #Update local time matrix
-    TIME_MATRIX = __update_time_matrix()
+    __update_time_matrix(remote_user, other_time_matrix)
 
-    #Update local event log, including updating block and unblock states
+    #Update block and unblock states
+    block_unblock_events = list(filter(
+                            lambda event: 
+                                type(event) is BlockEvent 
+                                or type(event) is UnblockEvent,
+                            other_log))
 
-    #Update BLOCKED matrix
+    #If the block or unblock event is more recent than our most recent one...
+    for event in block_unblock_events:
+        if event.time > BLOCKED[event.user][event.target].time :
+
+            #Remove our event from the log...
+            LOG = {our_event for our_event in LOG
+                     if not (
+                                (
+                                 (type(event) is BlockEvent) or
+                                 (type(event) is UnblockEvent)
+                                ) and
+                                event.user == our_event.user and event.target == our_event.target
+                        )
+                } 
+
+            #Update our BLOCKED matrix...
+            BLOCKED[event.user][event.target] = event
+
+            #and insert the event into our log
+            LOG.add(event)
+
+    #Merge the other log with our log after removing block and unblock events
+    other_log = set(filter(
+                    lambda event: not (
+                                    type(event) is BlockEvent
+                                    or type(event) is UnblockEvent
+                                ),
+                other_log))
+    LOG = LOG.union(other_log)
+    print(LOG)
 
     #Backup
     __BACKUP_LOG()
