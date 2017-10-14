@@ -14,39 +14,12 @@ def client():
     hostname = "127.0.0.1"
     mb_port=9000
     h_port=9999
-	
-# To connect to the mailbox
-    def connect(hostname, mb_port):
-        sock.connect((hostname, mb_port))
+    mb_address="127.0.0.1:9000"
 
-    #def send_msg(message) :
-    #    sent = sock.send(message)
-    #    if sent == 0 :
-    #        raise RuntimeError("Socket connection was broken...")
-        #total = 0
-        #while totalsent < len(message):
-        #    sent = self.sock.send(message[totalsent:])
-        #    if sent == 0:
-        #        raise RuntimeError("Socket connection was broken...")
-        #    total = total + sent
- 
-    #def receive_msg(msg_length):
-    #    response = client.recv(msg_length)
-    #    return response
-        #chunks = []
-        #bytes = 0
-        #while bytes < msg_length:
-        #    chunk = sock.recv(min(msg_length - bytes, 2048))
-        #    if chunk == '':
-        #        raise RuntimeError("Socket connection broken...")
-        #    chunks.append(chunk)
-        #    bytes = bytes + len(chunk)
-        #return ''.join(chunks)
-        
-    #Command functions
     def __tweet(message) :
         print "Tweeting..."
-        connect(hostname,mb_port)
+        #sock.connect(hostname + ":" + mb_port)
+        sock.connect(mb_address)
         sock.send("0")
         response = sock.recv(40)
         if response.decode() == "Ack" :
@@ -61,7 +34,8 @@ def client():
 
     def __view() :
         print "Showing..."
-        connect(hostname,mb_port)
+        #sock.connect(hostname,mb_port)
+        sock.connect(mb_address)
         sock.send("1")
         response = sock.recv(1024)
         buffer_size = atoi(response.decode())
@@ -71,7 +45,8 @@ def client():
 
     def __block(message):
         print "Blocking..."
-        connect(hostname,mb_port)
+        #sock.connect(hostname,mb_port)
+        sock.connect(mb_address)
         sock.send("2")
         response = sock.recv(40)
         if response.decode() == "Ack" :
@@ -84,7 +59,8 @@ def client():
 
     def __unblock(message):
         print "Unblocking..."
-        connect(hostname,mb_port)
+        #sock.connect(hostname,mb_port)
+        sock.connect(mb_address)
         sock.send("3")
         response = sock.recv(40)
         if response.decode() == "Ack" :
