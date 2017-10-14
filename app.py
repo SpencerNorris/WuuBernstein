@@ -268,6 +268,7 @@ def tweet(text):
         L = pickle.dumps(L)
 
         #TODO: send pickled objects to mailbox of target user w/ timestamp####################
+        #@Sabbir
         pass
 
 
@@ -378,16 +379,19 @@ def view():
 
     #Pull in all tweets and sort
     tweets = [(tweet.user, tweet.text, tweet.time) for tweet in __GET_ALL_TWEETS()]
-    tweets = sort(tweets, key=lambda tweet: tweet[2], reverse=true)
+    tweets = sorted(tweets, key=lambda tweet: tweet[2], reverse=True)
 
     #filter out tweets this user isn't allowed to see
     for other_user in USERS:
+        if other_user == MY_USER:
+            continue
         block_unblock_event = BLOCKED[other_user][MY_USER]
         if type(block_unblock_event) is BlockEvent:
             tweets = list(filter(lambda tweet: not tweet[0] == other_user, tweets))
 
     #Send tweets back to client
     __send_to_client(tweets)
+    return tweets
 
 
 
@@ -430,6 +434,7 @@ def get_message():
     '''
     Retrieves a message from the mailbox daemon.
     '''
+    #@Sabbir
     def __decode_receive_tweet():
         '''
         Performs the transaction for receiving a log and time
@@ -507,15 +512,15 @@ def get_message():
 #     #Handle commands
 #     #NOTE: Can always assume commands come from client
 #     if cmd[0] == 'block':
-#         block(cmd[1])
+#         block(cmd[1]) # blocked user goes here
 #     elif cmd[0] == 'unblock':
-#         unblock(cmd[1])
+#         unblock(cmd[1]) # unblocked user goes here
 #     elif cmd[0] == 'tweet':
-#         tweet(cmd[1])
+#         tweet(cmd[1]) # tweet text goes here
 #     elif cmd[0] == 'view':
 #         view()
 #     elif cmd[0] == 'receive_tweet':
-#         receive_tweet(cmd[1][0], cmd[1][1], cmd[1][2])
+#         receive_tweet(cmd[1][0], cmd[1][1], cmd[1][2]) #other user, other log and other time matrix
 #     else:
 #         print("No matching command!")
 #         continue
