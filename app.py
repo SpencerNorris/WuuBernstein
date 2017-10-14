@@ -391,7 +391,6 @@ def view():
 
     #Send tweets back to client
     __send_to_client(tweets)
-    return tweets
 
 
 
