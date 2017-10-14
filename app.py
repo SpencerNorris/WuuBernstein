@@ -234,7 +234,7 @@ def __GET_PRUNED_LOG(other_user):
     return pruned_log
 
 
-#============================ API Application ============================#
+#============================ Server API Implementation ============================#
 
 
 #Populate globals on initialization
@@ -266,8 +266,8 @@ def tweet(text):
         hashable_time_matrix = pickle.dumps(hashable_time_matrix)
         L = pickle.dumps(L)
 
-        #TODO: send pickled objects to mailbox of target user####################
-
+        #TODO: send pickled objects to mailbox of target user w/ timestamp####################
+        pass
 
 
     #Update time matrix
@@ -391,12 +391,31 @@ def view():
 
 
 
-def receive_tweet(other_log, other_time_matrix):
+def receive_tweet(other_user, other_log, other_time_matrix):
     '''
     Reads in log, time matrix from other node and updates each.
     '''
+    global USERS
+    global TIME_MATRIX
     
+    def __update_time_matrix():
+        '''
+        Updates the time matrix according to Wuu-Bernstein.
+        '''
+        for user in USERS:
+            TIME_MATRIX[MY_USER][user] = max(
+                    TIME_MATRIX[MY_USER][user],
+                    other_time_matrix[MY_USER][user]
+                )
+        for user in USERS:
+            for other_user in USERS:
+            TIME_MATRIX[user][other_user] = max(
+                    TIME_MATRIX[user][other_user],
+                    other_time_matrix[MY_USER][other_user]
+                )
+
     #Update local time matrix
+    TIME_MATRIX = __update_time_matrix()
 
     #Update local event log, including updating block and unblock states
 
@@ -414,22 +433,35 @@ def get_message():
     '''
     def __decode_receive_tweet():
         '''
+        Performs the transaction for receiving a log and time
+        matrix from the mailbox.
+
         Requires two handshakes: one to receive the pickled log,
         the other to receive the pickled time matrix.
         '''
-       pass
+        other_user = None
+        time_matrix = None
+        log = None
 
-    def __decode_tweet():
-        pass
+        #Perform transaction to read in, unpickle and 
+        #unhash the time matrix and log
 
-    def __decode_block():
-        pass
+        #Close connection
+        client.close()
 
-    def __decode_unblock():
-        pass
+        return [other_user, log, time_matrix]
 
-    def __decode_view():
-        pass
+    def __decode_strin_in():
+        '''
+        Carries out the client-side interaction for 
+        pulling in a string from the mailbox as part
+        of the transaction for blocking, unblocking
+        and tweeting.
+        '''
+        strin = None
+        client.close()
+        return strin
+
 
     # create an ipv4 (AF_INET) socket object using the tcp protocol (SOCK_STREAM)
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -438,15 +470,30 @@ def get_message():
     # client.connect((target, port))
     client.connect(('0.0.0.0', 9999))
 
-    # send some data (in this case a HTTP GET request)
-    client.send('GET /index.html HTTP/1.1\r\nHost: {}.{}\r\n\r\n'.format(sld, tld))
+    # TODO: implement request msg from mailbox
 
     # receive the response data (4096 is recommended buffer size)
-    response = client.recv(4096)
+    token = client.recv(4096)
+    token_to_cmd = {
+        '0' : 'tweet',
+        '1' : 'view',
+        '2' : 'block',
+        '3' : 'unblock', 
+        '4' : 'receive_tweet'
+    }
+    cmd = token_to_cmd[token]
+
+    if cmd == 'block' or cmd == 'unblock' or cmd == 'tweet':
+        return [cmd, __decode_string_in()]
+    elif cmd == 'view':
+        return ['view', None]
+    elif cmd == 'receive_tweet':
+        [cmd, __decode_receive_tweet()]
 
 
-#MAIN LOOP
-while(1):
+#=================MAIN LOOP==========================================#
+
+while(True):
     cmd = get_message() #Retrieves message of form ('command', [Args])
 
     #No messages right now
@@ -468,9 +515,8 @@ while(1):
         tweet(cmd[1])
     elif cmd[0] == 'view':
         view()
-
-    #Otherwise, we're receiving a tweet from another node
+    elif cmd[0] == 'receive_tweet':
+        receive_tweet(cmd[1][0], cmd[1][1], cmd[1][2])
     else:
-        other_log = set(pickle.loads(cmd[1][0]))
-        other_time_matrix = __UNHASH_DICT(pickle.loads(cmd[1][1]))
-        receive_tweet(set(other_log), other_time_matrix)
+        print("No matching command!")
+        continue
