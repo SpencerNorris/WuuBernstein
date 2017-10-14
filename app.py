@@ -381,9 +381,9 @@ def view():
 
         #Our user is blocked, filter all tweets after block from other user
         if type(block_unblock_event) is BlockEvent:
-        tweets = list(filter(
-                    key=lambda tweet: 
-                        tweet[2] < block_unblock_event.time and tweet[0] == block_unblock_event.user
+            tweets = list(filter(
+                lambda tweet: 
+                    tweet[2] < block_unblock_event.time and tweet[0] == block_unblock_event.user,
                 tweets))
 
     #Send tweets back to client
@@ -409,7 +409,7 @@ def receive_tweet(other_user, other_log, other_time_matrix):
                 )
         for user in USERS:
             for other_user in USERS:
-            TIME_MATRIX[user][other_user] = max(
+                TIME_MATRIX[user][other_user] = max(
                     TIME_MATRIX[user][other_user],
                     other_time_matrix[MY_USER][other_user]
                 )
@@ -493,30 +493,30 @@ def get_message():
 
 #=================MAIN LOOP==========================================#
 
-while(True):
-    cmd = get_message() #Retrieves message of form ('command', [Args])
+# while(True):
+#     cmd = get_message() #Retrieves message of form ('command', [Args])
 
-    #No messages right now
-    if cmd is None:
-        continue
+#     #No messages right now
+#     if cmd is None:
+#         continue
 
-    #Catch invalid commands
-    if not cmd[0] in VALID_COMMANDS:
-        print("Invalid command!")
-        continue
+#     #Catch invalid commands
+#     if not cmd[0] in VALID_COMMANDS:
+#         print("Invalid command!")
+#         continue
 
-    #Handle commands
-    #NOTE: Can always assume commands come from client
-    if cmd[0] == 'block':
-        block(cmd[1])
-    elif cmd[0] == 'unblock':
-        unblock(cmd[1])
-    elif cmd[0] == 'tweet':
-        tweet(cmd[1])
-    elif cmd[0] == 'view':
-        view()
-    elif cmd[0] == 'receive_tweet':
-        receive_tweet(cmd[1][0], cmd[1][1], cmd[1][2])
-    else:
-        print("No matching command!")
-        continue
+#     #Handle commands
+#     #NOTE: Can always assume commands come from client
+#     if cmd[0] == 'block':
+#         block(cmd[1])
+#     elif cmd[0] == 'unblock':
+#         unblock(cmd[1])
+#     elif cmd[0] == 'tweet':
+#         tweet(cmd[1])
+#     elif cmd[0] == 'view':
+#         view()
+#     elif cmd[0] == 'receive_tweet':
+#         receive_tweet(cmd[1][0], cmd[1][1], cmd[1][2])
+#     else:
+#         print("No matching command!")
+#         continue
