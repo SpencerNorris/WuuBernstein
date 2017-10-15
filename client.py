@@ -13,22 +13,37 @@ def client():
     mb_port=9000
     client_port=9999
     mb_address=(hostname,mb_port)
-
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_addr = (hostname,client_port)
+    
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(client_addr)
+    print "Client ", sock.getsockname(), " created"
+    sock.connect(mb_address)
 
     def __tweet(message) :
         print "Tweeting..."
-        #sock.connect(hostname + ":" + mb_port)
-        sock.connect(mb_address)
+        #sock.send(message)
+        #print "Response: ", sock.recv(1024)
         sock.send("0")
-        response = sock.recv(40)
-        if response.decode() == "Ack" :
-            sock.send(sys.getsizeof(message))
-            response2 = sock.recv(40)
-            if response2.decode() == "Ack" :
-                sock.send(message)
+        response = None
+        while response is None :
+            print "Waiting for first response..."
+            response = sock.recv(1024).decode().strip()
+            print "Received response:",response
+            if response == 'Ack' :
+                print "Received first Acknowledgement"
+                sock.send(str(sys.getsizeof(message)))
+                #sock.send('1024')
+                print "Sent buffer size"
+                response2 = None
+                while response2 is None :
+                    print "Waiting for second response..."
+                    response2 = sock.recv(1024).decode()
+                    print "Received response:",response2
+                    if response2 == 'Ack' :
+                        print "Received second Acknowledgement, sending tweet"
+                        sock.send(message)
 
         #sock.close()
         #print message
@@ -36,8 +51,7 @@ def client():
 
     def __view() :
         print "Showing..."
-        #sock.connect(hostname,mb_port)
-        sock.connect(mb_address)
+        #sock.connect(mb_address)
         sock.send("1")
         response = sock.recv(1024)
         buffer_size = atoi(response.decode())
@@ -47,8 +61,7 @@ def client():
 
     def __block(message):
         print "Blocking..."
-        #sock.connect(hostname,mb_port)
-        sock.connect(mb_address)
+        #sock.connect(mb_address)
         sock.send("2")
         response = sock.recv(40)
         if response.decode() == "Ack" :
@@ -61,8 +74,7 @@ def client():
 
     def __unblock(message):
         print "Unblocking..."
-        #sock.connect(hostname,mb_port)
-        sock.connect(mb_address)
+        #sock.connect(mb_address)
         sock.send("3")
         response = sock.recv(40)
         if response.decode() == "Ack" :
@@ -81,7 +93,7 @@ def client():
             }
 
     VALID_COMMANDS = ['view', 'tweet', 'block', 'unblock', 'exit']
-    while(1):
+    while True :
         input_var = raw_input("Enter a command: ")
         endIndex=-1
         input_command = ""
@@ -103,9 +115,10 @@ def client():
                 command[input_command.lower()](input_var[endIndex+1:])
             else : 
                 command[input_command.lower()](input_var)
-        return 0
+        #return 0
     
 
 if __name__ == '__main__':
     #app.run()
-    sys.exit(client())
+    client()
+    #sys.exit(client())
