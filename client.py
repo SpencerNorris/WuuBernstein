@@ -61,28 +61,49 @@ def client():
 
     def __block(message):
         print "Blocking..."
-        #sock.connect(mb_address)
         sock.send("2")
-        response = sock.recv(40)
-        if response.decode() == "Ack" :
-            sock.send(sys.getsizeof(message))
-            response2 = sock.recv(40)
-            if response2.decode() == "Ack" :
-                sock.send(message)
-        print message
+        response = None
+        while response is None :
+            print "Waiting for first response..."
+            response = sock.recv(1024).decode().strip()
+            print "Received response:",response
+            if response == 'Ack' :
+                print "Received first Acknowledgement"
+                sock.send(str(sys.getsizeof(message)))
+                #sock.send('1024')
+                print "Sent buffer size"
+                response2 = None
+                while response2 is None :
+                    print "Waiting for second response..."
+                    response2 = sock.recv(1024).decode()
+                    print "Received response:",response2
+                    if response2 == 'Ack' :
+                        print "Received second Acknowledgement, sending block"
+                        sock.send(message)
+
         #pass
 
     def __unblock(message):
         print "Unblocking..."
-        #sock.connect(mb_address)
-        sock.send("3")
-        response = sock.recv(40)
-        if response.decode() == "Ack" :
-            sock.send(sys.getsizeof(message))
-            response2 = sock.recv(40)
-            if response2.decode() == "Ack" :
-                sock.send(message)
-        print message
+        sock.send("0")
+        response = None
+        while response is None :
+            print "Waiting for first response..."
+            response = sock.recv(1024).decode().strip()
+            print "Received response:",response
+            if response == 'Ack' :
+                print "Received first Acknowledgement"
+                sock.send(str(sys.getsizeof(message)))
+                #sock.send('1024')
+                print "Sent buffer size"
+                response2 = None
+                while response2 is None :
+                    print "Waiting for second response..."
+                    response2 = sock.recv(1024).decode()
+                    print "Received response:",response2
+                    if response2 == 'Ack' :
+                        print "Received second Acknowledgement, sending unblock"
+                        sock.send(message)
         #pass
     
     command = {

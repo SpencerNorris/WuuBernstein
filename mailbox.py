@@ -30,62 +30,88 @@ class Mailbox:
         Implementation of handshakes for receiving 'show' requests from client,
         receiving 'tweet' requests from other nodes,
         and sending 'show' and 'tweet' requests to server.
-        '''           
-        def __handle_tweet(self):
-            print "Sending Tweet Acknowledgement to Client ",addr
-            client_sock.send('ACK')
-            response = sock.recv(1024)
-            buffer_size = atoi(response.decode())
-            print "Sending Tweet Buffer Size Acknowledgement to Client ",addr
-            client_sock.send('ACK')
-            entry=sock.recv(buffer_size)
-            print "Received tweet", entry.decode()
-            # add tweet to message queue
-            pass
-
-        def __handle_view(self,buff_size):
-            # add view message to queue
-            self.mailbox.connect(self.host_ip,self.server_port)
-            self.mailbox.send("1")
-            response = self.mailbox.recv(40)
-            if response.decode() == "Ack" :
-                self.mailbox.send("Ack")
-            pass
-
-        def __handle_block(self,buff_size):
-            client_sock.send('ACK')
-            response = sock.recv(1024)
-            buffer_size = atoi(response.decode())
-            client_sock.send('ACK')
-            entry=sock.recv(buffer_size)
-            #print entry.decode()
-            # add block to message queue
-            pass
-
-        def __handle_unblock(self,buff_size):
-            client_sock.send('ACK')
-            response = sock.recv(1024)
-            buffer_size = atoi(response.decode())
-            client_sock.send('ACK')
-            entry=sock.recv(buffer_size)
-            #print entry.decode()
-            # add unblock to message queue
-            pass
-
-        def __handle_message(self,buff_size):
-            client_sock.send('ACK')
-            pass
-
-        '''self.command = {
-            '0': __handle_tweet,
-            '1': __handle_view,
-            '2': __handle_block,
-            '3': __handle_unblock,
-            '4' : __handle_message
-            }'''
+        '''
 
         def __listen(self,client_sock, addr) :
             buffer_size=1024
+
+#            def __handle_tweet(self):
+#                print "Sending Tweet Acknowledgement to Client ",addr
+#                client_sock.send('Ack')
+#                response = None
+#                while response is None :
+#                    print "Waiting for response from Client ",addr
+#                    response = client_sock.recv(1024).decode()
+#                    print "Received response:",response
+#                    buffer_size = int(response)
+#                print "Sending Tweet Buffer Size Acknowledgement to Client ",addr
+#                client_sock.send('Ack')
+#                entry = None
+#                while entry is None :
+#                    entry=client_sock.recv(buffer_size).decode()
+#                    print "Received Tweet:", entry.decode()
+#                pass
+#                # add tweet to message queue
+#
+#            def __handle_view(self):
+#                # add view message to queue
+#                #self.mailbox.connect(self.host_ip,self.server_port)
+#                #self.mailbox.send("1")
+#                #response = self.mailbox.recv(40)
+#                #if response.decode() == "Ack" :
+#                #    self.mailbox.send("Ack")
+#                pass
+#
+#            def __handle_block(self):
+#                print "Sending Block Acknowledgement to Client ",addr
+#                client_sock.send('Ack')
+#                response = None
+#                while response is None :
+#                    print "Waiting for response from Client ",addr
+#                    response = client_sock.recv(1024).decode()
+#                    print "Received response:",response
+#                    buffer_size = int(response)
+#                print "Sending Block Buffer Size Acknowledgement to Client ",addr
+#                client_sock.send('Ack')
+#                entry = None
+#                while entry is None :
+#                    entry=client_sock.recv(buffer_size).decode()
+#                    print "Received Block:", entry.decode()
+#                # add block to message queue
+#                pass
+#
+#            def __handle_unblock(self):
+#                print "Sending Unblock Acknowledgement to Client ",addr
+#                client_sock.send('Ack')
+#                response = None
+#                while response is None :
+#                    print "Waiting for response from Client ",addr
+#                    response = client_sock.recv(1024).decode()
+#                    print "Received response:",response
+#                    buffer_size = int(response)
+#                print "Sending Unblock Buffer Size Acknowledgement to Client ",addr
+#                client_sock.send('Ack')
+#                entry = None
+#                while entry is None :
+#                    entry=client_sock.recv(buffer_size).decode()
+#                    print "Received Unblock:", entry.decode()
+#                # add unblock to message queue
+#                pass
+#
+#            def __handle_message(self):
+#                #client_sock.send('ACK')
+#                pass
+#
+#            command = {
+#                '0': __handle_tweet(self),
+#                '1': __handle_view(self),
+#                '2': __handle_block(self),
+#                '3': __handle_unblock(self),
+#                '4' : __handle_message(self)
+#                }
+#
+#
+#            buffer_size=1024
             print "Listening to Client ",addr #client_sock.getsockname()
             while True :
                 try :
@@ -95,7 +121,9 @@ class Mailbox:
                             print "Invalid message type"
                         else :
                             print "Valid message type"
+                            #command(input_data)
                             if input_data == '0' :
+                            #    __handle_tweet(self)
                                 print "Sending Tweet Acknowledgement to Client ",addr
                                 client_sock.send('Ack')
                                 response = None
@@ -109,13 +137,54 @@ class Mailbox:
                                 entry = None
                                 while entry is None :
                                     entry=client_sock.recv(buffer_size).decode()
-                                    print "Received tweet:", entry.decode()
+                                    print "Received Tweet:", entry.decode()
                                 # add tweet to message queue
-                            #pass
-                            #self.command[input_data]
-                            #print "Received input '",input_data,"' from Client ",addr
-                            #response=input_data
-                            #client_sock.send(response)
+                            elif input_data == '1' :
+                            #    __handle_view(self)
+                            # add view message to queue
+                            #self.mailbox.connect(self.host_ip,self.server_port)
+                            #self.mailbox.send("1")
+                            #response = self.mailbox.recv(40)
+                            #if response.decode() == "Ack" :
+                            #    self.mailbox.send("Ack")
+                                pass
+                            elif input_data == '2' :
+                            #    __handle_block(self)
+                                print "Sending Block Acknowledgement to Client ",addr
+                                client_sock.send('Ack')
+                                response = None
+                                while response is None :
+                                    print "Waiting for response from Client ",addr
+                                    response = client_sock.recv(1024).decode()
+                                    print "Received response:",response
+                                    buffer_size = int(response)
+                                print "Sending Block Buffer Size Acknowledgement to Client ",addr
+                                client_sock.send('Ack')
+                                entry = None
+                                while entry is None :
+                                    entry=client_sock.recv(buffer_size).decode()
+                                    print "Received Block:", entry.decode()
+                                pass
+                            elif input_data == '3' :
+                            #    __handle_unblock(self)
+                                print "Sending Unblock Acknowledgement to Client ",addr
+                                client_sock.send('Ack')
+                                response = None
+                                while response is None :
+                                    print "Waiting for response from Client ",addr
+                                    response = client_sock.recv(1024).decode()
+                                    print "Received response:",response
+                                    buffer_size = int(response)
+                                print "Sending Unblock Buffer Size Acknowledgement to Client ",addr
+                                client_sock.send('Ack')
+                                entry = None
+                                while entry is None :
+                                    entry=client_sock.recv(buffer_size).decode()
+                                    print "Received Unblock:", entry.decode()
+                                pass
+                            elif input_data == '4' :
+                            #    __handle_message(self)
+                                pass
                     else :
                         raise error("Client ",addr," is no longer sending data")
                 except : 
