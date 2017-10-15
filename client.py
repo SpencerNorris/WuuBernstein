@@ -9,12 +9,14 @@ import socket
 
 
 def client():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
     hostname = "127.0.0.1"
     mb_port=9000
-    h_port=9999
-    mb_address="127.0.0.1:9000"
+    client_port=9999
+    mb_address=(hostname,mb_port)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_addr = (hostname,client_port)
+    sock.bind(client_addr)
 
     def __tweet(message) :
         print "Tweeting..."
@@ -28,7 +30,7 @@ def client():
             if response2.decode() == "Ack" :
                 sock.send(message)
 
-        close(sock)
+        #sock.close()
         #print message
         #pass
 
