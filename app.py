@@ -266,7 +266,9 @@ def tweet(text):
         L = list(log)
         hashable_time_matrix = pickle.dumps(hashable_time_matrix)
         L = pickle.dumps(L)
-
+        
+        
+        #server.connect(('127.0.0.1', 9000)) 
         #TODO: send pickled objects to mailbox of target user w/ timestamp####################
         #@Sabbir
         pass
@@ -473,7 +475,7 @@ def receive_tweet(remote_user, other_log, other_time_matrix):
     __BACKUP_MATRIX()
 
 
-def get_message():
+def get_message(server):
     '''
     Retrieves a message from the mailbox daemon.
     '''
@@ -519,6 +521,7 @@ def get_message():
     #client.connect(('0.0.0.0', 9999))
 
     # TODO: implement request msg from mailbox
+    token = '4'
     server.send("4")
     response = None
     while response is None :
@@ -533,7 +536,6 @@ def get_message():
         response2 = server.recv(1024).decode()
         if response2 == 'Not Empty' :
             print "Mailbox not empty"
-            token = None
             while token is None :
                 token = server.recv(1024).decode()
         elif response2 == 'Empty' :
@@ -557,18 +559,17 @@ def get_message():
     elif cmd == 'receive_tweet':
         [cmd, __decode_receive_tweet()]
 
-
 #=================MAIN LOOP==========================================#
 # create an ipv4 (AF_INET) socket object using the tcp protocol (SOCK_STREAM)
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-server.bind(('127.0.0.1', 5000))
-server.connect(('127.0.0.1', 9000)) # connect to mailbox
-    
-print "Server ", server.getsockname(), " created"
 
 while(True):
-    cmd = get_message() #Retrieves message of form ('command', [Args])
+    time.sleep(2)
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(('127.0.0.1', 5000))
+    server.connect(('127.0.0.1', 9000)) # connect to mailbox
+    cmd = get_message(server) #Retrieves message of form ('command', [Args])
+    server.close()
 
     #No messages right now
     if cmd is None:

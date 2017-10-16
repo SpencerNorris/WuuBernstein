@@ -49,15 +49,19 @@ def client():
         #print message
         #pass
 
-    def __view() :
+    def __view(message) :
         print "Showing..."
-        #sock.connect(mb_address)
         sock.send("1")
-        response = sock.recv(1024)
-        buffer_size = atoi(response.decode())
-        sock.send("Ack")
-        entry=sock.recv(buffer_size)
-        print entry.decode()
+        response = None
+        while response is None :
+            print "Waiting for view response..."
+            response = sock.recv(1024).decode()
+            print "Received response:",response
+            if response == 'Ack' :
+                print "Received view Acknowledgement"
+#        sock.send("Ack")
+#        entry=sock.recv(buffer_size)
+#        print entry.decode()
 
     def __block(message):
         print "Blocking..."

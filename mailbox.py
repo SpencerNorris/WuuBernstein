@@ -145,6 +145,10 @@ class Mailbox:
                                 time = datetime.utcnow()
                                 self.msgQ.put((time,0,entry))# add tweet to message queue
                             elif input_data == '1' :
+                                print "Received View Request from ",addr
+                                print "Sending View Acknowledgement to",addr
+                                client_sock.send('Ack')
+                                
                             #    __handle_view(self)
                             # add view message to queue
                             #self.mailbox.connect(self.host_ip,self.server_port)
@@ -203,6 +207,7 @@ class Mailbox:
                                         print "Received Acknowledgement from ",addr
                                         if not self.msgQ.empty() :
                                             client_sock.send("Not Empty")
+                                            print msgQ.get()
                                         else :
                                             client_sock.send("Empty")
                                 pass
