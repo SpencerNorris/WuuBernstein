@@ -143,7 +143,7 @@ class Mailbox:
                                     print "Received Tweet:", entry.decode()
                                 #msgCount += 1
                                 time = datetime.utcnow()
-                                self.msgQ.put((time,entry))# add tweet to message queue
+                                self.msgQ.put((time,0,entry))# add tweet to message queue
                             elif input_data == '1' :
                             #    __handle_view(self)
                             # add view message to queue
@@ -170,7 +170,7 @@ class Mailbox:
                                     entry=client_sock.recv(buffer_size).decode()
                                     print "Received Block:", entry.decode()
                                 time = datetime.utcnow()
-                                self.msgQ.put((time,entry))
+                                self.msgQ.put((time,2,entry))
                                 pass
                             elif input_data == '3' :
                             #    __handle_unblock(self)
@@ -189,7 +189,7 @@ class Mailbox:
                                     entry=client_sock.recv(buffer_size).decode()
                                     print "Received Unblock:", entry.decode()
                                 time = datetime.utcnow()
-                                self.msgQ.put((time,entry))
+                                self.msgQ.put((time,3,entry))
                                 pass
                             elif input_data == '4' :
                                 print "Sending Receive Tweet Acknowledgement to ",addr
@@ -201,10 +201,10 @@ class Mailbox:
                                     print "Received response:",response
                                     if response == 'Ack' :
                                         print "Received Acknowledgement from ",addr
-                                        # if messages in queue
-                                        #client_sock.send("4")
-                                        #else
-                                        client_sock.send("None")
+                                        if not self.msgQ.empty() :
+                                            client_sock.send("Not Empty")
+                                        else :
+                                            client_sock.send("Empty")
                                 pass
                     else :
                         raise error(addr,"is no longer sending data")
