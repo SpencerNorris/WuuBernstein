@@ -3,12 +3,15 @@ Authors: Spencer Norris, Sabbir Rashid
 File: mailbox.py
 Description: mailbox for handling message reception from remote processes.
 '''
-
+from datetime import datetime
+from copy import copy
+import requests
+import pickle
+import time
 import socket
 import sys
 import threading
-#from multiprocessing import Queue
-from Queue import PriorityQueue
+import Queue
 
 class Mailbox:
     def __init__(self):
@@ -19,9 +22,9 @@ class Mailbox:
         self.mailbox = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.mailbox.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.mailbox.bind((self.host_ip, self.mail_port))
-        self.msgQ = PriorityQueue()
-        self.threadQ = PriorityQueue()
-
+        self.msgQ = Queue.PriorityQueue()
+        self.threads = []
+        
         self.VALID_TYPES = ['0', '1', '2', '3', '4']
 
     def __handle_req(self,client_sock, addr):
@@ -124,21 +127,23 @@ class Mailbox:
                             #command(input_data)
                             if input_data == '0' :
                             #    __handle_tweet(self)
-                                print "Sending Tweet Acknowledgement to Client ",addr
+                                print "Sending Tweet Acknowledgement to",addr
                                 client_sock.send('Ack')
                                 response = None
                                 while response is None :
-                                    print "Waiting for response from Client ",addr
+                                    print "Waiting for response from",addr
                                     response = client_sock.recv(1024).decode()
                                     print "Received response:",response
                                     buffer_size = int(response)
-                                print "Sending Tweet Buffer Size Acknowledgement to Client ",addr
+                                print "Sending Tweet Buffer Size Acknowledgement to",addr
                                 client_sock.send('Ack')
                                 entry = None
                                 while entry is None :
                                     entry=client_sock.recv(buffer_size).decode()
                                     print "Received Tweet:", entry.decode()
-                                # add tweet to message queue
+                                #msgCount += 1
+                                time = datetime.utcnow()
+                                self.msgQ.put((time,entry))# add tweet to message queue
                             elif input_data == '1' :
                             #    __handle_view(self)
                             # add view message to queue
@@ -150,43 +155,59 @@ class Mailbox:
                                 pass
                             elif input_data == '2' :
                             #    __handle_block(self)
-                                print "Sending Block Acknowledgement to Client ",addr
+                                print "Sending Block Acknowledgement to",addr
                                 client_sock.send('Ack')
                                 response = None
                                 while response is None :
-                                    print "Waiting for response from Client ",addr
+                                    print "Waiting for response from",addr
                                     response = client_sock.recv(1024).decode()
                                     print "Received response:",response
                                     buffer_size = int(response)
-                                print "Sending Block Buffer Size Acknowledgement to Client ",addr
+                                print "Sending Block Buffer Size Acknowledgement to",addr
                                 client_sock.send('Ack')
                                 entry = None
                                 while entry is None :
                                     entry=client_sock.recv(buffer_size).decode()
                                     print "Received Block:", entry.decode()
+                                time = datetime.utcnow()
+                                self.msgQ.put((time,entry))
                                 pass
                             elif input_data == '3' :
                             #    __handle_unblock(self)
-                                print "Sending Unblock Acknowledgement to Client ",addr
+                                print "Sending Unblock Acknowledgement to",addr
                                 client_sock.send('Ack')
                                 response = None
                                 while response is None :
-                                    print "Waiting for response from Client ",addr
+                                    print "Waiting for response from",addr
                                     response = client_sock.recv(1024).decode()
                                     print "Received response:",response
                                     buffer_size = int(response)
-                                print "Sending Unblock Buffer Size Acknowledgement to Client ",addr
+                                print "Sending Unblock Buffer Size Acknowledgement to",addr
                                 client_sock.send('Ack')
                                 entry = None
                                 while entry is None :
                                     entry=client_sock.recv(buffer_size).decode()
                                     print "Received Unblock:", entry.decode()
+                                time = datetime.utcnow()
+                                self.msgQ.put((time,entry))
                                 pass
                             elif input_data == '4' :
-                            #    __handle_message(self)
+                                print "Sending Receive Tweet Acknowledgement to ",addr
+                                client_sock.send('Ack')
+                                response = None
+                                while response is None :
+                                    print "Waiting for response from ",addr
+                                    response = client_sock.recv(1024).decode()
+                                    print "Received response:",response
+                                    if response == 'Ack' :
+                                        print "Received Acknowledgement from ",addr
+                                        # if messages in queue
+                                        #client_sock.send("4")
+                                        #else
+                                        client_sock.send("None")
                                 pass
                     else :
-                        raise error("Client ",addr," is no longer sending data")
+                        raise error(addr,"is no longer sending data")
                 except : 
                     client_sock.close()
                     return False
@@ -219,7 +240,7 @@ class Mailbox:
                 #args=(client_sock,)
                 target= self.__handle_req(client_sock, addr)
             )
-            #threads.append(client_handler)
+            self.threads.append(client_handler)
             
             client_handler.start()
 
