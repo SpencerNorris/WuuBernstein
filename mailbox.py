@@ -105,24 +105,23 @@ class Mailbox:
                                                         response3 = client_sock.recv(1024).decode()
                                                         print "Received response:",response3
                                                         if response3 == 'Ack' :
-                                                            #msgQCopy = []
-                                                            #while True:
-                                                            #     try:
-                                                            #         elem = self.msgQ.get(block=False)
-                                                            #     except Empty:
-                                                            #         break
-                                                            #     else:
-                                                            #         msgQCopy.append(elem)
-                                                            #for elem in msgQCopy:
-                                                            #    self.msgQ.put(elem)
-                                                            #for elem in msgQCopy:
+                                                            msgQCopy = Queue.PriorityQueue()
+                                                            for i in self.msgQ.queue:
+                                                                msgQCopy.put(i)
+                                                            #print msgQCopy
+                                                            #for i in range(len(self.msgQ)):
+                                                            #    temp = self.msgQ.get()
+                                                            #    self.msgQ.put(temp)
+                                                            #    client_sock.send(str(temp))
                                                             while not self.msgQ.empty() :
                                                                 client_sock.send(str(self.msgQ.get()))
-                                                                #client_sock.send(str(elem))
+                                                                #client_sock.send(str(msgQCopy.get()))
                                                                 response4 = None
                                                                 while response4 is None :
                                                                     response4 = client_sock.recv(1024).decode()
                                                                     print "Received response:",response4
+                                                            for i in msgQCopy.queue:
+                                                                self.msgQ.put(i)
                                 pass
                             elif input_data == '2' :
                             #    __handle_block(self)
@@ -213,12 +212,13 @@ class Mailbox:
         print("Mailbox listening on {}:{}".format(self.host_ip,self.mail_port))
         while True :
             client_sock, addr = self.mailbox.accept()
-            client_handler = threading.Thread(
-                target= self.__handle_req(client_sock, addr)
-            )
-            self.threads.append(client_handler)
-            client_handler.start()
-
+            #client_handler = threading.Thread(
+            #    target= self.__handle_req(client_sock, addr)
+            #)
+            #self.threads.append(client_handler)
+            #client_handler.start()
+            start_new_thread(self.__handle_req,(client_sock,addr))
+    
 
 if __name__ == '__main__':
     mailbox = Mailbox()

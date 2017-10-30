@@ -9,11 +9,12 @@ import sys
 import socket 
 import time
 import os
+import calendar
 
 MY_USER = os.environ['TWITTER_USER']
 
-def client(client_port):
-    hostname = "127.0.0.1"
+def client(client_port,hostname):
+    #hostname = "127.0.0.1"
     mb_port=9000
     #client_port=9999
     mb_address=(hostname,mb_port)
@@ -57,8 +58,8 @@ def client(client_port):
                             print "Received response:",response3
                             if response3 == 'Ack' :
                                 print "Received third Acknowledgement, sending time"
-                                time = datetime.utcnow()
-                                sock.send(str(time))
+                                etime = int(time.time())#datetime.utcnow()
+                                sock.send(str(etime))
                                 response4 = None
                                 while response4 is None :
                                     print "Waiting for fourth response..."
@@ -98,7 +99,7 @@ def client(client_port):
                         sock.send("Ack")
                         for i in range(0,queuesize) :
                             msg = sock.recv(1024).decode()
-                            if make_tuple(msg)[0] not in blocked_list :
+                            if make_tuple(msg)[0] not in blocked_list :#and int(make_tuple(msg)[1]) < int(time.time()):
                                 print "Received message:", msg
                             sock.send("Ack")
 #        entry=sock.recv(buffer_size)
@@ -132,8 +133,8 @@ def client(client_port):
                             print "Received response:",response3
                             if response3 == 'Ack' :
                                 print "Received third Acknowledgement, sending time"
-                                time = datetime.utcnow()
-                                sock.send(str(time))
+                                etime = int(time.time())
+                                sock.send(str(etime))
                                 response4 = None
                                 while response4 is None :
                                     print "Waiting for fourth response..."
@@ -175,8 +176,8 @@ def client(client_port):
                             print "Received response:",response3
                             if response3 == 'Ack' :
                                 print "Received third Acknowledgement, sending time"
-                                time = datetime.utcnow()
-                                sock.send(str(time))
+                                etime = int(time.time())
+                                sock.send(str(etime))
                                 response4 = None
                                 while response4 is None :
                                     print "Waiting for fourth response..."
@@ -227,5 +228,5 @@ def client(client_port):
 
 if __name__ == '__main__':
     #app.run()
-    client(sys.argv[1])
+    client(sys.argv[1],sys.argv[2])
     #sys.exit(client())
