@@ -3,18 +3,24 @@
 Authors: Spencer Norris, Sabbir Rashid
 Description: Script for Wuu-Bernstein client.
 '''
-
+from datetime import datetime
+from ast import literal_eval as make_tuple
 import sys
 import socket 
+import time
+import os
 
+MY_USER = os.environ['TWITTER_USER']
 
-def client():
+def client(client_port):
     hostname = "127.0.0.1"
     mb_port=9000
-    client_port=9999
+    #client_port=9999
     mb_address=(hostname,mb_port)
-    client_addr = (hostname,client_port)
+    client_addr = (hostname,int(client_port))
     
+    blocked_list = []
+
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(client_addr)
@@ -44,6 +50,23 @@ def client():
                     if response2 == 'Ack' :
                         print "Received second Acknowledgement, sending tweet"
                         sock.send(message)
+                        response3 = None
+                        while response3 is None :
+                            print "Waiting for third response..."
+                            response3 = sock.recv(1024).decode()
+                            print "Received response:",response3
+                            if response3 == 'Ack' :
+                                print "Received third Acknowledgement, sending time"
+                                time = datetime.utcnow()
+                                sock.send(str(time))
+                                response4 = None
+                                while response4 is None :
+                                    print "Waiting for fourth response..."
+                                    response4 = sock.recv(1024).decode()
+                                    print "Received response:",response4
+                                    if response4 == 'Ack' :
+                                        print "Received fourth Acknowledgement, sending user"
+                                        sock.send(MY_USER)
 
         #sock.close()
         #print message
@@ -75,7 +98,8 @@ def client():
                         sock.send("Ack")
                         for i in range(0,queuesize) :
                             msg = sock.recv(1024).decode()
-                            print "Received message:", msg
+                            if make_tuple(msg)[0] not in blocked_list :
+                                print "Received message:", msg
                             sock.send("Ack")
 #        entry=sock.recv(buffer_size)
 #        print entry.decode()
@@ -101,6 +125,25 @@ def client():
                     if response2 == 'Ack' :
                         print "Received second Acknowledgement, sending block"
                         sock.send(message)
+                        response3 = None
+                        while response3 is None :
+                            print "Waiting for third response..."
+                            response3 = sock.recv(1024).decode()
+                            print "Received response:",response3
+                            if response3 == 'Ack' :
+                                print "Received third Acknowledgement, sending time"
+                                time = datetime.utcnow()
+                                sock.send(str(time))
+                                response4 = None
+                                while response4 is None :
+                                    print "Waiting for fourth response..."
+                                    response4 = sock.recv(1024).decode()
+                                    print "Received response:",response4
+                                    if response4 == 'Ack' :
+                                        print "Received fourth Acknowledgement, sending user"
+                                        sock.send(MY_USER)
+                                        print "Adding user to Blocked List"
+                                        blocked_list.append(message)
 
         #pass
 
@@ -125,6 +168,28 @@ def client():
                     if response2 == 'Ack' :
                         print "Received second Acknowledgement, sending unblock"
                         sock.send(message)
+                        response3 = None
+                        while response3 is None :
+                            print "Waiting for third response..."
+                            response3 = sock.recv(1024).decode()
+                            print "Received response:",response3
+                            if response3 == 'Ack' :
+                                print "Received third Acknowledgement, sending time"
+                                time = datetime.utcnow()
+                                sock.send(str(time))
+                                response4 = None
+                                while response4 is None :
+                                    print "Waiting for fourth response..."
+                                    response4 = sock.recv(1024).decode()
+                                    print "Received response:",response4
+                                    if response4 == 'Ack' :
+                                        print "Received fourth Acknowledgement, sending user"
+                                        sock.send(MY_USER)
+                                        try :
+                                            print "Removing user from Blocked List"
+                                            blocked_list.remove(message)
+                                        except : 
+                                            print "User not in blocked list"
         #pass
     
     command = {
@@ -162,5 +227,5 @@ def client():
 
 if __name__ == '__main__':
     #app.run()
-    client()
+    client(sys.argv[1])
     #sys.exit(client())
