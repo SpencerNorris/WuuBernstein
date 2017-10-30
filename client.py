@@ -59,7 +59,24 @@ def client():
             print "Received response:",response
             if response == 'Ack' :
                 print "Received view Acknowledgement"
-#        sock.send("Ack")
+                sock.send("Ack")
+                response2 = None
+                while response2 is None :
+                    response2 = sock.recv(1024).decode()
+                    print "Received response:",response
+                    if response2 == 'Ack' :
+                        print "Received second Acknowledgement"
+                        sock.send("Ack")
+                        response3 = None
+                        print "Waiting for queue size..."
+                        response3 = sock.recv(1024).decode()
+                        print "Received response:",response3
+                        queuesize=int(response3)
+                        sock.send("Ack")
+                        for i in range(0,queuesize) :
+                            msg = sock.recv(1024).decode()
+                            print "Received message:", msg
+                            sock.send("Ack")
 #        entry=sock.recv(buffer_size)
 #        print entry.decode()
 
