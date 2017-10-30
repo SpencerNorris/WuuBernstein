@@ -99,7 +99,7 @@ def client(client_port,hostname):
                         sock.send("Ack")
                         for i in range(0,queuesize) :
                             msg = sock.recv(1024).decode()
-                            if make_tuple(msg)[0] not in blocked_list :#and int(make_tuple(msg)[1]) < int(time.time()):
+                            if make_tuple(msg)[0] not in blocked_list and int(make_tuple(msg)[1]) < int(time.time()):
                                 print "Received message:", msg
                             sock.send("Ack")
 #        entry=sock.recv(buffer_size)
