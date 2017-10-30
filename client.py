@@ -18,7 +18,7 @@ def client(client_port,hostname):
     mb_port=9000
     #client_port=9999
     mb_address=(hostname,mb_port)
-    client_addr = (hostname,int(client_port))
+    client_addr = ("127.0.0.1",int(client_port))
     
     blocked_list = []
 
